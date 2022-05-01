@@ -1,0 +1,732 @@
+---
+title: 'HCC: Predictive Model'
+author: "Ph. Nesma Magdy Ahmed"
+date: "22/04/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(Greg)
+library(dplyr)
+library(tidyr)
+library(finalfit)
+library(ggplot2)
+library(moments)
+library(e1071)
+library(dummies)
+library(dplyr)
+library(tidyr)
+library(finalfit)
+library(dummies)
+library(moments)
+library(corrplot)
+library(scatterplot3d)
+library(ggplot2)
+library(ggplot2)
+library(caret)
+library(GGally)
+library(ggthemes)
+library(broom)
+library(dplyr)
+library(bindrcpp)
+library(caTools)
+library(rattle)
+library(RColorBrewer)
+library(nnet)
+library(rpart.plot)
+library(dichromat)
+library(Rmpfr)
+library(digest)
+library(convertr)
+library(microbenchmark)
+library(varhandle)
+library(hablar)
+library(magrittr)
+library(survminer)
+library(markovchain)
+library(survival)
+library(expss)
+library(ggpubr)
+library(tidyverse)
+library(Rserve)
+library(esquisse)
+library(psych)
+library(likert)
+library(reshape)
+library(usethis)
+library(table1)
+library(Hmisc)
+library(psych)
+library(MASS)
+library(gtsummary)
+library(ResourceSelection)
+library(generalhoslem)
+library(ordinal)
+library(highcharter)
+library(leaflet)
+library(xlsx)
+library(mlbench)
+library(rcompanion)
+library(caret)
+library(performance)
+library(foreign)
+library(rms)
+library(see)
+library(rlang)
+library(tidymodels)
+library(janitor)
+library(patchwork)
+library(ROCR)
+library(performance)
+library(caret)
+library(nricens)
+```
+
+## Data Cleaning:
+
+```{r message=FALSE, warning=FALSE}
+
+data <- read.csv(choose.files(), header = T, stringsAsFactors = T)
+attach(data)
+
+data[sapply(data[ ,1:23], is.numeric)] <- lapply(data[sapply(data[ ,1:23], is.numeric)], 
+                                       as.factor)
+dt <- read.csv(choose.files(), header = T, stringsAsFactors = T)
+attach(dt)
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+levels(data$Gender)[levels(data$Gender) == 0] <- "Female"
+levels(data$Gender)[levels(data$Gender) == 1] <- "Male"
+
+
+levels(data$Symptoms)[levels(data$Symptoms) == 0] <- "No Symptoms"
+levels(data$Symptoms)[levels(data$Symptoms) == 1] <- "Symptoms"
+
+levels(data$Alcohol)[levels(data$Alcohol) == 0] <- "Not Alcoholic"
+levels(data$Alcohol)[levels(data$Alcohol) == 1] <- "Alcoholic"
+
+levels(data$HBsAg)[levels(data$HBsAg) == 0] <- "No Hepatitis B Surface Antigen"
+levels(data$HBsAg)[levels(data$HBsAg) == 1] <- "Hepatitis B Surface Antigen"
+
+levels(data$HBeAg)[levels(data$HBeAg) == 0] <- "No Hepatitis B e Antigen"
+levels(data$HBeAg)[levels(data$HBeAg) == 1] <- "Hepatitis B e Antigen"
+
+levels(data$HBcAb)[levels(data$HBcAb) == 0] <- "No Hepatitis B Core Antibody"
+levels(data$HBcAb)[levels(data$HBcAb) == 1] <- "Hepatitis B Core Antibody"
+
+levels(data$HCVAb)[levels(data$HCVAb) == 0] <- "No Hepatitis C Virus Antibody"
+levels(data$HCVAb)[levels(data$HCVAb) == 1] <- "Hepatitis C Virus Antibody"
+
+levels(data$Cirrhosis)[levels(data$Cirrhosis) == 0] <- "No Cirrhosis"
+levels(data$Cirrhosis)[levels(data$Cirrhosis) == 1] <- "Cirrhosis"
+
+levels(data$Endemic)[levels(data$Endemic) == 0] <- "Not living in Endemic Countries"
+levels(data$Endemic)[levels(data$Endemic) == 1] <- "Living in Endemic Countries"
+
+levels(data$Smoking)[levels(data$Smoking) == 0] <- "Not Smoker"
+levels(data$Smoking)[levels(data$Smoking) == 1] <- "Smoker"
+
+levels(data$Diabetes)[levels(data$Diabetes) == 0] <- "Not Diabetic"
+levels(data$Diabetes)[levels(data$Diabetes) == 1] <- "Diabetic"
+
+levels(data$Obesity)[levels(data$Obesity) == 0] <- "Normal Weight"
+levels(data$Obesity)[levels(data$Obesity) == 1] <- "Obese"
+
+levels(data$Hemochro)[levels(data$Hemochro) == 0] <- "No Hemochromatosis"
+levels(data$Hemochro)[levels(data$Hemochro) == 1] <- "Hemochromatosis"
+
+levels(data$AHT)[levels(data$AHT) == 0] <- "No Arterial Hypertension"
+levels(data$AHT)[levels(data$AHT) == 1] <- "Arterial Hypertension"
+
+levels(data$CRI)[levels(data$CRI) == 0] <- "No Chronic Renal Insufficiency"
+levels(data$CRI)[levels(data$CRI) == 1] <- "Chronic Renal Insufficiency"
+
+levels(data$HIV)[levels(data$HIV) == 0] <- "No Human Immunodeficiency Virus (HIV)"
+levels(data$HIV)[levels(data$HIV) == 1] <- "Human Immunodeficiency Virus (HIV)"
+
+levels(data$NASH)[levels(data$NASH) == 0] <- "No Nonalcoholic Steatohepatitis"
+levels(data$NASH)[levels(data$NASH) == 1] <- "Nonalcoholic Steatohepatitis"
+
+levels(data$Varices)[levels(data$Varices) == 0] <- "No Esophageal Varices"
+levels(data$Varices)[levels(data$Varices) == 1] <- "Esophageal Varices"
+
+levels(data$Spleno)[levels(data$Spleno) == 0] <- "No Splenomegaly"
+levels(data$Spleno)[levels(data$Spleno) == 1] <- "Splenomegaly"
+
+levels(data$PHT)[levels(data$PHT) == 0] <- "No Portal Hypertension"
+levels(data$PHT)[levels(data$PHT) == 1] <- "Portal Hypertension"
+
+levels(data$PVT)[levels(data$PVT) == 0] <- "No Portal Vein Thrombosis"
+levels(data$PVT)[levels(data$PVT) == 1] <- "Portal Vein Thrombosis"
+
+levels(data$Metastasis)[levels(data$Metastasis) == 0] <- "No Liver Metastasis"
+levels(data$Metastasis)[levels(data$Metastasis) == 1] <- "Liver Metastasis"
+
+levels(data$Hallmark)[levels(data$Hallmark) == 0] <- "No Radiological Hallmark"
+levels(data$Hallmark)[levels(data$Hallmark) == 1] <- "Radiological Hallmark"
+
+levels(data$Class)[levels(data$Class) == 0] <- "Died"
+levels(data$Class)[levels(data$Class) == 1] <- "Lived"
+
+dt$Class1 <- dt$Class
+levels(dt$Class1)[levels(dt$Class1) == 0] <- 1
+levels(dt$Class1)[levels(dt$Class1) == 1] <- 0
+
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+data$Packs_year <- round(as.numeric(sub(",", ".", sub(".", " ,", data$Packs_year, fixed=TRUE), fixed=TRUE)),0)
+
+data$INR <- round(as.numeric(sub(",", ".", sub(".", " ,", data$INR, fixed=TRUE), fixed=TRUE)),2)
+
+data$AFP <- round(as.numeric(sub(",", ".", sub(".", " ,", data$AFP, fixed=TRUE), fixed=TRUE)),2)
+
+data$Hemoglobin <- round(as.numeric(sub(",", ".", sub(".", " ,", data$Hemoglobin, fixed=TRUE), fixed=TRUE)),2)
+
+data$MCV <- round(as.numeric(sub(",", ".", sub(".", " ,", data$MCV, fixed=TRUE), fixed=TRUE)),2)
+
+data$Leucocytes <- round(as.numeric(sub(",", ".", sub(".", " ,", data$Leucocytes, fixed=TRUE), fixed=TRUE)),2)
+
+data$Platelets <- round(as.numeric(sub(",", ".", sub(".", " ,", data$Platelets, fixed=TRUE), fixed=TRUE)),2)
+
+data$Albumin <- round(as.numeric(sub(",", ".", sub(".", " ,", data$Albumin, fixed=TRUE), fixed=TRUE)),2)
+
+data$Total_Bil <- round(as.numeric(sub(",", ".", sub(".", " ,", data$Total_Bil, fixed=TRUE), fixed=TRUE)),2)
+
+data$ALT <- round(as.numeric(sub(",", ".", sub(".", " ,", data$ALT, fixed=TRUE), fixed=TRUE)),2)
+
+data$AST <- round(as.numeric(sub(",", ".", sub(".", " ,", data$AST, fixed=TRUE), fixed=TRUE)),2)
+
+data$GGT <- round(as.numeric(sub(",", ".", sub(".", " ,", data$GGT, fixed=TRUE), fixed=TRUE)),2)
+
+data$ALP <- round(as.numeric(sub(",", ".", sub(".", " ,", data$ALP, fixed=TRUE), fixed=TRUE)),2)
+
+data$TP <- round(as.numeric(sub(",", ".", sub(".", " ,", data$TP, fixed=TRUE), fixed=TRUE)),2)
+data$Major_Dim <- dt$Major_Dim
+data$Creatinine <- round(as.numeric(sub(",", ".", sub(".", " ,", data$Creatinine, fixed=TRUE), fixed=TRUE)),2)
+
+data$Major_Dim <- round(as.numeric(sub(",", ".", sub(".", " ,", data$Major_Dim, fixed=TRUE), fixed=TRUE)),2)
+
+data$Dir_Bil <- round(as.numeric(sub(",", ".", sub(".", " ,", data$Dir_Bil, fixed=TRUE), fixed=TRUE)),2)
+
+data$Iron <- round(as.numeric(sub(",", ".", sub(".", " ,", data$Iron, fixed=TRUE), fixed=TRUE)),2)
+
+data$Sat <- round(as.numeric(sub(",", ".", sub(".", " ,", data$Sat, fixed=TRUE), fixed=TRUE)),2)
+
+data$Ferritin <- round(as.numeric(sub(",", ".", sub(".", " ,", data$Ferritin, fixed=TRUE), fixed=TRUE)),2)
+
+data$Age <- as.numeric(data$Age)
+data$Grams_day <- as.numeric(data$Grams_day)
+
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+dt$Packs_year <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$Packs_year, fixed=TRUE), fixed=TRUE)),0)
+
+dt$INR <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$INR, fixed=TRUE), fixed=TRUE)),2)
+
+dt$AFP <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$AFP, fixed=TRUE), fixed=TRUE)),2)
+
+dt$Hemoglobin <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$Hemoglobin, fixed=TRUE), fixed=TRUE)),2)
+
+dt$MCV <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$MCV, fixed=TRUE), fixed=TRUE)),2)
+
+dt$Leucocytes <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$Leucocytes, fixed=TRUE), fixed=TRUE)),2)
+
+dt$Platelets <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$Platelets, fixed=TRUE), fixed=TRUE)),2)
+
+dt$Albumin <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$Albumin, fixed=TRUE), fixed=TRUE)),2)
+
+dt$Total_Bil <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$Total_Bil, fixed=TRUE), fixed=TRUE)),2)
+
+dt$ALT <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$ALT, fixed=TRUE), fixed=TRUE)),2)
+
+dt$AST <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$AST, fixed=TRUE), fixed=TRUE)),2)
+
+dt$GGT <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$GGT, fixed=TRUE), fixed=TRUE)),2)
+
+dt$ALP <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$ALP, fixed=TRUE), fixed=TRUE)),2)
+
+dt$TP <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$TP, fixed=TRUE), fixed=TRUE)),2)
+
+dt$Creatinine <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$Creatinine, fixed=TRUE), fixed=TRUE)),2)
+
+dt$Major_Dim <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$Major_Dim, fixed=TRUE), fixed=TRUE)),2)
+
+dt$Dir_Bil <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$Dir_Bil, fixed=TRUE), fixed=TRUE)),2)
+
+dt$Iron <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$Iron, fixed=TRUE), fixed=TRUE)),2)
+
+dt$Sat <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$Sat, fixed=TRUE), fixed=TRUE)),2)
+
+dt$Ferritin <- round(as.numeric(sub(",", ".", sub(".", " ,", dt$Ferritin, fixed=TRUE), fixed=TRUE)),2)
+
+dt$Class2 <- dt$Class1
+dt$Class1 <- as.factor(dt$Class1)
+
+```
+
+## Demographic Characheristics:
+
+```{r message=FALSE, warning=FALSE}
+
+data %>% tbl_summary(by=Class) %>%
+  bold_labels() %>%
+  add_labelled_class()%>%
+   modify_footnote(
+    all_stat_cols() ~ "Median (IQR) or Frequency (%)"
+  ) %>%
+  add_p() %>%
+  modify_header(label ~ "**Participants Characteristics**") %>%
+  modify_caption("**Table 1. Patients' Characteristics (n = 204)**") %>%
+  bold_labels() %>%
+  bold_p()
+
+```
+
+## Splitting data into Test and Train:
+
+By splitting the data set into random test and train data set will leading to potential colinearity issue.
+
+```{r message=FALSE, warning=FALSE}
+
+split1 <- sample(c(rep(0, 0.7 * nrow(data)), rep(1, 0.3 * nrow(dt))))
+
+train <- dt[split1 == 0, ]
+test <- dt[split1== 1, ] 
+
+paste("train sample size: ", dim(train)[1])
+paste("test sample size: ", dim(test)[1])
+
+```
+
+
+```{r fig.height=6, fig.width=13, message=FALSE, warning=FALSE}
+
+cats.fit <- glm(Class1 ~ Symptoms + Endemic + PVT + Metastasis +
+                  Age + PS + Encephalopathy + Ascites + INR + AFP +
+                  Hemoglobin + Leucocytes + Albumin + Total_Bil + AST + GGT +
+                  ALP + Creatinine + Major_Dim + Dir_Bil + Ferritin, data=train,
+                family=binomial)
+summary(cats.fit)
+
+check_model(cats.fit)
+
+```
+
+After the model is created and fitted, this model is used for making predictions on the test data set values.
+
+```{r message=FALSE, warning=FALSE}
+
+pred <- predict(cats.fit, newdata = test, type = "response")
+pred_bens <- as.factor(ifelse(pred>0.5,1,0))
+
+```
+
+
+```{r message=FALSE, warning=FALSE}
+
+confusionMatrix(data = pred_bens, reference = test$Class1)
+
+```
+
+### Cutoff Values vs Accuracy:
+
+```{r message=FALSE, warning=FALSE}
+
+pred.rocr <- ROCR::prediction(pred, test$Class1)
+
+eval <- ROCR::performance(pred.rocr, "acc")
+
+plot(eval)
+
+```
+
+### Create AUC and ROC for test data:
+
+ROC CURVE - ROC (Receiver Operator Characteristic Curve) can help in deciding the best threshold value. A ROC curve is plotted with FPR on the X-axis and TPR on the y-axis. A high threshold value gives - high specificity and low sensitivity A low threshold value gives - low specificity and high sensitivity.
+
+
+```{r message=FALSE, warning=FALSE}
+library(pROC)
+test_roc <- roc(test$Class1 ~ pred, plot = TRUE, print.auc = TRUE)
+
+auc(test_roc)
+
+plot(test_roc,  
+     print.cutoffs.at=-c(50,90,110,120), 
+     cutoff.label.function=`-`,
+     points.pch = 20, points.col = "darkblue", 
+     text.adj=c(1.2,-0.5), legacy.axes = TRUE,
+     print.auc = TRUE)
+
+```
+
+The model was verified in the external data set, AUC =0.824, indicating that the model has a good discrimination in the validation of the external data set.
+
+##### As the random data splitting results in a potential colinearity issue.
+##### Then, I will try the Bootstraping Method.
+
+## Bootstraping:
+
+```{r message=FALSE, warning=FALSE}
+
+dt2 <- datadist(dt)
+
+options(datadist = "dt2")
+
+fit1 <- lrm(Class1~Symptoms + Endemic + PVT + Metastasis + Age + PS +
+              Encephalopathy + Ascites + INR + AFP + Hemoglobin + Leucocytes +
+              Albumin + Total_Bil + AST + GGT + ALP + Creatinine + Major_Dim +
+              Dir_Bil + Ferritin, data = dt, x=T, y=T)
+
+fit1
+
+```
+
+According to the calculated results, the C-Statistics is 0.886 in this data, which indicate a strong model.
+
+```{r fig.height=13, fig.width=11, message=FALSE, warning=FALSE}
+
+fun2 <- function(x)plogis(x-fit1$coefficients[1]+fit1$coefficients[2])
+fun3 <- function(x)plogis(x-fit1$coefficients[1]+fit1$coefficients[3])
+
+nom1 <- nomogram(fit1, fun = list('Prob Y>=1' = plogis, 'Prob Y>=2' = fun2),
+                 fun.at = c(.01, .05, seq(.1, .9, by=1), .95, .99),
+                 lp = F, funlabel = "Mortality Risk from HCC", minlength = 1,
+                 abbrev = T)
+
+plot(nom1)
+
+```
+
+```{r message=FALSE, warning=FALSE}
+
+call <- calibrate(fit1, method = "boot", B=100)
+plot(call, xlim=c(0, 1.0), ylim=c(0, 1.0))
+
+```
+
+it is obvious that the contribution of some predictors to the model are negligible, like, Encephalopathy, Albumin, Total Bilirubin, and Direct Bilirubin.
+
+Exclude these variables that contributes less to the result from the regression model, then reconstruct model “fit2” and display the model parameters.
+
+```{r message=FALSE, warning=FALSE}
+
+fit2 <- lrm(Class1~Symptoms + Endemic + PVT + Metastasis + Age + PS + Ascites +
+              INR + AFP + Hemoglobin + Leucocytes +  AST + GGT + ALP +
+              Creatinine + Major_Dim + Ferritin, data = dt, x=T, y=T)
+
+fit2
+
+```
+
+The C-Statistics = 0.884. The nomogram for the fit2 model become:
+
+```{r fig.height=13, fig.width=11, message=FALSE, warning=FALSE}
+
+fun2 <- function(x)plogis(x-fit1$coefficients[1]+fit1$coefficients[2])
+fun3 <- function(x)plogis(x-fit1$coefficients[1]+fit1$coefficients[3])
+
+nom2 <- nomogram(fit2, fun = list('Prob Y>=1' = plogis, 'Prob Y>=2' = fun2),
+                 fun.at = c(.01, .05, seq(.1, .9, by=1), .95, .99),
+                 lp = F, funlabel = "Mortality Risk from HCC",
+                 minlength = 1, abbrev = T)
+
+plot(nom2)
+
+```
+
+And the Calibration Model Become:
+
+```{r message=FALSE, warning=FALSE}
+
+call2 <- calibrate(fit2, method = "boot", B=100)
+plot(call2, xlim=c(0, 1.0), ylim=c(0, 1.0))
+
+```
+
+### Calculation C-Statistics of Logistic Regression Model:
+
+```{r message=FALSE, warning=FALSE}
+
+dt$predvalue <- predict(fit1)
+
+pred1 <- prediction(dt$predvalue, dt$Class1)
+
+pref <- ROCR::performance(pred1, "tpr", "fpr")
+
+plot(pref)
+abline(0, 1, col = 3, lty = 2)
+
+```
+
+With Hmisc library:
+
+```{r message=FALSE, warning=FALSE}
+library(Hmisc)
+
+somers2(dt$predvalue, dt$Class2)
+
+```
+
+Calculating the area under the ROC curve (AUC) is C-statistics = 0.8861015, which is consistent with the above calculation results.
+
+
+### NRI calculation of dichotomous outcome:
+
+Build a matrix out of a subset of the data containing Symptoms, Endemic, PVT, Metastasis, Age, PS, Encephalopathy, Ascites, INR, AFP, Hemoglobin, Leucocytes, Albumin, Total Bilirubin, AST, GGT, ALP, Creatinine, Major Dimension, Direct Bilirubin, and Ferritin.
+
+```{r message=FALSE, warning=FALSE}
+
+event <- dt$Class1
+
+z.std <- as.matrix(subset(dt, select = c(Symptoms, Endemic, PVT, Metastasis,
+                                         Age, PS, Encephalopathy, Ascites, INR,
+                                         AFP, Hemoglobin, Leucocytes, Albumin,
+                                         Total_Bil, AST, GGT, ALP, Creatinine,
+                                         Major_Dim, Dir_Bil, Ferritin)))
+  
+```
+
+Build a matrix out of a subset of data containing Symptoms, Endemic, PVT, Metastasis, Age, PS, Ascites, INR, AFP, Hemoglobin, Leucocytes, AST, GGT, ALP, Creatinine, Major Dimension, and Ferritin.
+
+```{r message=FALSE, warning=FALSE}
+
+z.new <- as.matrix(subset(dt, select = c(Symptoms, Endemic, PVT, Metastasis,
+                                         Age, PS, Ascites, INR, AFP, Hemoglobin,
+                                         Leucocytes, AST, GGT, ALP, Creatinine,
+                                         Major_Dim, Ferritin)))
+  
+```
+
+Construct two logistic regression model: mstd and mnew. Model “mnew” has one more variable “protime”. Calculation using “nricens” library requires x = TRUE, which means that output contains the matrix.
+
+```{r message=FALSE, warning=FALSE}
+
+mstd <- glm(event ~ Symptoms + Endemic + PVT + Metastasis + Age + PS +
+              Encephalopathy + Ascites + INR + AFP + Hemoglobin + Leucocytes +
+              Albumin + Total_Bil + AST + GGT + ALP + Creatinine + Major_Dim +
+              Dir_Bil + Ferritin, binomial(logit),
+            data.frame(dt$Class1, z.std), x=T)
+
+mnew <- glm(event ~ Symptoms + Endemic + PVT + Metastasis + Age + PS + Ascites
+            + INR + AFP + Hemoglobin + Leucocytes + AST + GGT + ALP +
+              Creatinine + Major_Dim + Ferritin, binomial(logit),
+            data.frame(dt$Class1, z.new), x=T)
+
+```
+
+##### Calculating the predicted risk of two models.
+
+```{r message=FALSE, warning=FALSE}
+
+nribin(mdl.std = mstd, mdl.new = mnew, cut = c(0.2, 0.4),
+       niter = 100, updown = 'category')
+
+```
+
+##### Calculation of risk difference NRI using (‘event’, ‘z.std’, ‘z.new’)
+
+```{r message=FALSE, warning=FALSE}
+
+nribin(event = dt$Class2, z.std = z.std, z.new = z.new, cut = c(0.2, 0.4),
+       niter = 100, updown = 'category')
+
+```
+
+##### Calculation of risk difference NRI using (‘mdl.std’, ‘mdl.new’), updown = ‘diff’:
+
+```{r message=FALSE, warning=FALSE}
+
+nribin(mdl.std = mstd, mdl.new = mnew, cut = 0.02, niter = 0, updown = 'diff')
+
+```
+
+##### Calculation of risk difference NRI using (‘event’, ‘z.std’, ‘z.new’), updown = ‘diff’:
+
+```{r message=FALSE, warning=FALSE}
+
+nribin(event = dt$Class2, z.std = z.std, z.new = z.new, cut = 0.02,
+       niter = 100, updown = 'diff')
+
+```
+
+### IDI calculation of dichotomous outcome:
+
+```{r message=FALSE, warning=FALSE}
+
+library(PredictABEL)
+
+p.std <- mstd$fitted.values
+p.new <- mnew$fitted.values
+
+dat_new <- cbind(dt, event)
+
+reclassification(data = dat_new, cOutcome = 20, predrisk1 = p.std,
+                 predrisk2 = p.new,
+                 cutoff = c(0, 0.2, 0.4, 1))
+
+```
+
+IDI is 0.0039, indicating that new model improves 0.39% comparing to original model.
+
+### Decision Curve Analysis for Binary Outcome:
+
+We can view the data points on the complex model curve, where NB can also be changed to sNB, indicating a standardized prevalence.
+
+```{r message=FALSE, warning=FALSE}
+
+library(rmda)
+
+complex <- decision_curve(Class2~Symptoms + Endemic + PVT + Metastasis +
+                            Age + PS + Encephalopathy + Ascites + INR + AFP +
+                            Hemoglobin + Leucocytes + Albumin + Total_Bil + AST
+                          + GGT + ALP + Creatinine + Major_Dim + Dir_Bil +
+                            Ferritin, data = dt, 
+                          family = binomial(link = 'logit'),
+                          thresholds = seq(0, 1, by = 0.01),
+                          confidence.intervals = 0.95,
+                          study.design = "cohort",
+                          population.prevalence = 0.3)
+
+summary(complex, measure = 'NB')
+
+plot_clinical_impact(complex, population.size = 1000, cost.benefit.axis = T,
+                     n.cost.benefits = 8, col = c('red', 'blue'),
+                     confidence.intervals = T,
+                     ylim = c(0, 1000),
+                     legend.position = 'topright')
+```
+
+The red curve (number of high risk) indicates the number of people classified as positive (high risk) by the complex model at each threshold probability; the blue curve [(number high) risk with outcome] is the number of true positives for each threshold probability.
+
+#### External validation of Logistic regression model:
+
+```{r message=FALSE, warning=FALSE}
+
+mod <- glm(Class2 ~ Symptoms + Endemic + PVT + Metastasis + Age + PS +
+             Encephalopathy + Ascites + INR + AFP + Hemoglobin + Leucocytes +
+             Albumin + Total_Bil + AST + GGT + ALP + Creatinine + Major_Dim +
+             Dir_Bil + Ferritin, data=dt, family=binomial)
+
+h1 <- hoslem.test(mod$y, fitted(mod), g=10)
+h1
+
+```
+
+P value is 0.3026, It cannot be considered that the model does not fit well yet.
+
+```{r message=FALSE, warning=FALSE}
+
+cbind(h1$observed, h1$expected)
+
+```
+
+Generate Hosmer-Lemeshow contingency table. Among them, y0 is the number of events that didn’t occur; y1 is the number of events that occurred; yhat0 represents the probability of events that will not happen predicted by the model; yhat1 represents the probability of events that will happen predicted by the model.
+
+```{r message=FALSE, warning=FALSE}
+
+pre <- predict(mod, dt, type = c("response"))
+
+h2 <- hoslem.test(dt$Class2, pre, g=10)
+h2
+
+```
+P=0.3026 > 0.05. So, it cannot be considered that the model fitting is poor, suggesting that the model performs well in the new data set. If P < 0.05, the model is poorly fitted.
+
+
+```{r message=FALSE, warning=FALSE}
+
+library(PredictABEL) 
+plotCalibration(data = dt, 
+                cOutcome = 2,
+                predRisk = pre,
+                rangeaxis = c(0, 1))
+
+```
+
+
+```{r message=FALSE, warning=FALSE}
+
+library(PredictABEL)
+library(pROC)
+plotCalibration(data = dt, 
+                cOutcome = 2,
+                predRisk = pre,
+                rangeaxis = c(0, 1))
+
+```
+
+#### Discrimination evaluation:
+
+```{r message=FALSE, warning=FALSE}
+
+library(pROC)
+pr <- predict(mod, type = c("response"))
+
+roc_curve <- pROC::roc(dt$Class2 ~ pr)
+
+
+auc(roc_curve)
+
+
+plot(roc_curve,  
+     print.cutoffs.at=-c(50,90,110,120), 
+     cutoff.label.function=`-`,
+     points.pch = 20, points.col = "darkblue", 
+     text.adj=c(1.2,-0.5), legacy.axes = TRUE,
+     print.auc = TRUE)
+
+```
+
+The model was verified in the external data set, AUC =0.8861, indicating that the model has a good discrimination in the validation of the external data set.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
